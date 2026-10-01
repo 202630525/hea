@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>B-612 Starlit Observatory</title>
+  
+  <!-- Fonts: Cinzel & Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            obsidian: '#080B10',
+            indigoDark: '#121824',
+            solarGold: '#F4C430',
+            roseCrimson: '#E06C75',
+            imperialAmethyst: '#A9A1E1',
+            cosmicSapphire: '#61AFEF',
+            solarAmber: '#E5C07B',
+            quietSage: '#98C379',
+            lunarSilver: '#ABB2BF',
+          },
+          fontFamily: {
+            serif: ['Cinzel', 'serif'],
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+      --bg-dark: #080B10;
+      --bg-indigo: #121824;
+      --glass-bg: rgba(255, 255, 255, 0.04);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --glass-hover: rgba(255, 255, 255, 0.08);
+      
+      --solar-gold: #F4C430;
+      --rose-crimson: #E06C75;
+      --imperial-amethyst: #A9A1E1;
+      --cosmic-sapphire: #61AFEF;
+      --solar-amber: #E5C07B;
+      --quiet-sage: #98C379;
+      --lunar-silver: #ABB2BF;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: #F0F6FC;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    /* Background Canvas */
+    #starfield-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* Glassmorphic UI Cards */
+    .glass-card {
+      background: rgba(18, 24, 36, 0.55);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .glass-card:hover {
+      border-color: rgba(244, 196, 48, 0.2);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(8, 11, 16, 0.6);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--solar-gold);
+    }
+
+    /* Dynamic Landing Portal Skies */
+    .sky-dawn {
+      background: radial-gradient(circle at 50% 30%, #3d2338 0%, #17101d 50%, #080b10 100%);
+    }
+    .sky-zenith {
+      background: radial-gradient(circle at 50% 30%, #162c46 0%, #0e1726 50%, #080b10 100%);
+    }
+    .sky-twilight {
+      background: radial-gradient(circle at 50% 30%, #361b24 0%, #1c1320 50%, #080b10 100%);
+    }
+    .sky-midnight {
+      background: radial-gradient(circle at 50% 30%, #0c1220 0%, #06090e 50%, #030406 100%);
+    }
+
+    /* Telescope Glass Lens */
+    .brass-eyepiece-container {
+      position: relative;
+      width: 280px;
+      height: 280px;
+      border-radius: 50%;
+      padding: 12px;
+      background: linear-gradient(145deg, rgba(244, 196, 48, 0.4), rgba(229, 192, 123, 0.1));
+      box-shadow: 0 0 40px rgba(244, 196, 48, 0.25), inset 0 0 20px rgba(244, 196, 48, 0.2);
+    }
+
+    .brass-eyepiece-inner {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: rgba(12, 18, 28, 0.85);
+      backdrop-filter: blur(20px);
+      border: 2px solid rgba(244, 196, 48, 0.5);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .brass-eyepiece-inner::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(45deg, transparent 45%, rgba(255,255,255,0.08) 50%, transparent 55%);
+      pointer-events: none;
+    }
+
+    /* Button Glow Animation */
+    .ignition-btn {
+      position: relative;
+      background: linear-gradient(135deg, rgba(244, 196, 48, 0.15), rgba(229, 192, 123, 0.05));
+      border: 1px solid var(--solar-gold);
+      color: var(--solar-gold);
+      box-shadow: 0 0 20px rgba(244, 196, 48, 0.2);
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .ignition-btn:hover {
+      background: var(--solar-gold);
+      color: #080B10;
+      box-shadow: 0 0 35px rgba(244, 196, 48, 0.6);
+      transform: scale(1.05);
+    }
+
+    /* Rose Under Glass Dome */
+    .dome-container {
+      position: relative;
+      width: 130px;
+      height: 180px;
+      margin: 0 auto;
+    }
+
+    .glass-dome {
+      width: 100%;
+      height: 100%;
+      border-radius: 65px 65px 12px 12px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.02) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      backdrop-filter: blur(8px);
+      box-shadow: inset 0 0 25px rgba(255, 255, 255, 0.1), 0 10px 30px rgba(0,0,0,0.5);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      padding-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .dome-base {
+      width: 140px;
+      height: 16px;
+      background: linear-gradient(90deg, #3d2d1d, #614830, #3d2d1d);
+      border-radius: 8px;
+      border: 1px solid rgba(229, 192, 123, 0.4);
+      margin-top: -6px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+    }
+
+    .rose-bloom {
+      position: relative;
+      width: 36px;
+      height: 36px;
+      background: radial-gradient(circle, #f58892 0%, #e06c75 70%, #a83b44 100%);
+      border-radius: 50% 50% 50% 10%;
+      transform: rotate(-45deg);
+      transition: all 0.5s ease;
+      filter: drop-shadow(0 0 10px var(--rose-crimson));
+    }
+
+    .rose-stem {
+      width: 4px;
+      height: 60px;
+      background: #4a7a52;
+      border-radius: 2px;
+      margin-top: -6px;
+    }
+
+    .rose-leaf {
+      position: absolute;
+      width: 14px;
+      height: 8px;
+      background: #5c9c66;
+      border-radius: 10px 0 10px 0;
+    }
+    .rose-leaf.left { left: -10px; top: 25px; transform: rotate(-20deg); }
+    .rose-leaf.right { right: -10px; top: 35px; transform: rotate(40deg); }
+
+    .starlight-particles {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: radial-gradient(circle at 50% 60%, rgba(244, 196, 48, 0.3) 0%, transparent 70%);
+      opacity: 0.2;
+      transition: opacity 0.5s ease;
+    }
+
+    /* Stamp Box */
+    .stamp-item {
+      aspect-ratio: 1;
+      border: 1px dashed rgba(244, 196, 48, 0.3);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1.25rem;
+      transition: all 0.25s ease;
+      background: rgba(255,255,255,0.02);
+    }
+    .stamp-item:hover {
+      border-color: var(--solar-gold);
+      background: rgba(244, 196, 48, 0.08);
+      transform: translateY(-2px);
+    }
+    .stamp-item.active {
+      border: 1px solid var(--solar-gold);
+      background: radial-gradient(circle, rgba(244, 196, 48, 0.25) 0%, rgba(244, 196, 48, 0.05) 100%);
+      color: var(--solar-gold);
+      box-shadow: 0 0 15px rgba(244, 196, 48, 0.3);
+    }
+
+    /* Floating Space Dust Item */
+    .dust-pill {
+      background: rgba(171, 178, 191, 0.08);
+      border: 1px solid rgba(171, 178, 191, 0.2);
+      backdrop-filter: blur(8px);
+      transition: all 0.2s ease;
+    }
+    .dust-pill:hover {
+      background: rgba(171, 178, 191, 0.15);
+      border-color: var(--lunar-silver);
+      box-shadow: 0 0 12px rgba(171, 178, 191, 0.2);
+    }
+
+    /* Pulse Glow */
+    @keyframes starlightPulse {
+      0%, 100% { opacity: 0.4; transform: scale(1); }
+      50% { opacity: 0.8; transform: scale(1.05); }
+    }
+    .pulse-glow {
+      animation: starlightPulse 4s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="relative min-h-screen text-slate-100 selection:bg-solarGold selection:text-obsidian">
+
+  <canvas id="starfield-canvas"></canvas>
+
+  <!-- CUSTOM TOAST NOTIFICATION BANNER -->
+  <div id="toast-banner" class="fixed top-5 right-5 z-50 transform translate-x-full transition-transform duration-300 max-w-md">
+    <div class="glass-card p-4 flex items-center gap-3 border-solarGold/40 bg-indigoDark/90 shadow-2xl">
+      <div id="toast-icon" class="text-xl">✨</div>
+      <div id="toast-message" class="text-xs sm:text-sm text-slate-200">Notification message</div>
+    </div>
+  </div>
+
+  <!-- 1. LANDING PORTAL OVERLAY -->
+  <div id="landing-portal" class="fixed inset-0 z-40 flex flex-col items-center justify-between p-6 transition-all duration-700 sky-zenith">
+    
+    <!-- Top Header Tag -->
+    <div class="pt-6 text-center">
+      <div class="text-xs uppercase tracking-[0.3em] text-solarGold font-semibold mb-1" id="sky-phase-label">Stellar Zenith</div>
+      <h1 class="font-serif text-2xl sm:text-3xl text-slate-100 tracking-wider">OBSERVATORY PORTAL B-612</h1>
+    </div>
+
+    <!-- Center Eyepiece Lens -->
+    <div class="brass-eyepiece-container my-auto">
+      <div class="brass-eyepiece-inner">
+        <div class="text-solarGold text-xs uppercase tracking-widest mb-2 font-serif">Deep Focus Eyepiece</div>
+        <p id="portal-quote-text" class="font-serif italic text-sm sm:text-base text-slate-200 leading-relaxed">
+          "The stars are beautiful, because of a flower that cannot be seen..."
+        </p>
+        <span id="portal-quote-author" class="text-[11px] text-slate-400 mt-3 font-sans block">— Antoine de Saint-Exupéry</span>
+      </div>
+    </div>
+
+    <!-- Bottom Ignition Controls & Horizon Silhouette -->
+    <div class="w-full max-w-md flex flex-col items-center gap-6 pb-8 z-10">
+      <button id="btn-ignition" class="ignition-btn px-8 py-3.5 rounded-full font-semibold text-sm tracking-wide flex items-center gap-2">
+        <span>공부 시작하자!^^</span>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+      </button>
+
+      <div class="text-xs text-slate-400 font-light flex items-center gap-2">
+        <span class="inline-block w-2 h-2 rounded-full bg-quietSage"></span>
+        <span>Local Sky Synchronized</span>
+      </div>
+    </div>
+
+    <!-- Asteroid Horizon Silhouette Curve -->
+    <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-[120vw] h-[120px] bg-indigoDark/80 rounded-[100%] border-t border-slate-700/50 pointer-events-none blur-[1px]"></div>
+  </div>
+
+  <!-- 2. MAIN APPLICATION SHELL -->
+  <div id="app-shell" class="relative z-10 flex flex-col md:flex-row min-h-screen opacity-0 pointer-events-none transition-opacity duration-700">
+    
+    <!-- SIDEBAR NAV -->
+    <aside class="w-full md:w-64 bg-indigoDark/70 border-r border-slate-800/80 p-5 flex flex-col justify-between backdrop-blur-xl shrink-0">
+      <div>
+        <!-- Brand -->
+        <div class="flex items-center gap-3 pb-6 border-b border-slate-800">
+          <div class="w-9 h-9 rounded-full bg-solarGold/10 border border-solarGold/40 flex items-center justify-center text-solarGold text-lg font-serif">
+            🪐
+          </div>
+          <div>
+            <h2 class="font-serif text-base font-semibold tracking-wide text-slate-100">B-612 OBSERVATORY</h2>
+            <p class="text-[10px] text-slate-400 tracking-wider">STARLIT DASHBOARD</p>
+          </div>
+        </div>
+
+        <!-- Navigation Links -->
+        <nav class="mt-6 flex flex-col gap-2">
+          <button data-target="view-lobby" class="nav-btn active flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-semibold tracking-wide transition-all text-solarGold bg-solarGold/10 border border-solarGold/20">
+            <span class="text-base">🌹</span>
+            <span>Today's Lobby</span>
+          </button>
+          
+          <button data-target="view-planner" class="nav-btn flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-semibold tracking-wide transition-all text-slate-400 hover:text-slate-200 hover:bg-slate-800/50">
+            <span class="text-base">🛰️</span>
+            <span>Orbital Planner</span>
+          </button>
+          
+          <button data-target="view-studio" class="nav-btn flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-semibold tracking-wide transition-all text-slate-400 hover:text-slate-200 hover:bg-slate-800/50">
+            <span class="text-base">🌌</span>
+            <span>Goal Studio</span>
+          </button>
+        </nav>
+      </div>
+
+      <!-- Volcano Engine Trigger Button -->
+      <div class="pt-6 border-t border-slate-800">
+        <button id="btn-open-volcano" class="w-full py-3 px-4 rounded-xl bg-roseCrimson/10 border border-roseCrimson/30 hover:bg-roseCrimson/20 text-roseCrimson text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-lg shadow-roseCrimson/5">
+          <span class="text-base">🌋</span>
+          <span>Volcano Focus Engine</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- MAIN WORKSPACE CONTENT AREA -->
+    <main class="flex-1 p-4 sm:p-8 overflow-y-auto max-w-7xl mx-auto w-full">
+      
+      <!-- ================= VIEW 1: TODAY'S LOBBY ================= -->
+      <section id="view-lobby" class="workspace-view space-y-6">
+        
+        <!-- Top Header -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-4 border-b border-slate-800/60">
+          <div>
+            <h1 class="font-serif text-2xl font-semibold tracking-wide text-slate-100">Surface Deck of B-612</h1>
+            <p class="text-xs text-slate-400 mt-1">Protect your singular focus and collect floating space dust.</p>
+          </div>
+          <div class="text-xs px-3 py-1.5 rounded-full bg-slate-800/80 border border-slate-700 text-slate-300 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-solarGold animate-ping"></span>
+            <span id="starlight-power-indicator">Starlight Power: 0%</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          <!-- CARD 1: THE ROSE UNDER GLASS -->
+          <div class="glass-card p-6 flex flex-col justify-between relative overflow-hidden">
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-roseCrimson"></span>
+                <h3 class="font-semibold text-sm text-slate-200">The Rose Under Glass</h3>
+              </div>
+              <span class="text-[10px] uppercase tracking-wider text-roseCrimson bg-roseCrimson/10 border border-roseCrimson/20 px-2 py-0.5 rounded-md">Primary Target</span>
+            </div>
+
+            <!-- Glass Dome Illustration -->
+            <div class="my-4 relative">
+              <div class="dome-container">
+                <div class="glass-dome" id="glass-dome-element">
+                  <div class="starlight-particles" id="starlight-glow-overlay"></div>
+                  <div class="rose-bloom" id="rose-bloom-element"></div>
+                  <div class="rose-stem">
+                    <div class="rose-leaf left"></div>
+                    <div class="rose-leaf right"></div>
+                  </div>
+                </div>
+                <div class="dome-base"></div>
+              </div>
+            </div>
+
+            <!-- Input Target Form -->
+            <div class="mt-4 space-y-3">
+              <label class="block text-[11px] text-slate-400">Daily Non-Negotiable Win</label>
+              <div class="flex gap-2">
+                <input type="text" id="input-rose-target" placeholder="What requires your absolute protection today?" class="w-full bg-obsidian/70 border border-slate-700/80 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-solarGold transition-colors">
+                <button id="btn-save-rose" class="px-3 py-2 bg-solarGold/20 border border-solarGold/40 text-solarGold hover:bg-solarGold hover:text-obsidian rounded-lg text-xs font-semibold transition-all shrink-0">
+                  Protect
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- CARD 2: TAMING RITUALS (HABITS) -->
+          <div class="glass-card p-6 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-solarGold"></span>
+                  <h3 class="font-semibold text-sm text-slate-200">Taming Rituals</h3>
+                </div>
+                <span class="text-[10px] uppercase tracking-wider text-solarGold bg-solarGold/10 border border-solarGold/20 px-2 py-0.5 rounded-md">Habits</span>
+              </div>
+              <p class="text-xs text-slate-400 italic mb-6">"If you tame me, then we shall need each other..."</p>
+
+              <!-- Stamp Cards Grid (7 Days) -->
+              <div class="grid grid-cols-4 gap-3 mb-6" id="stamp-grid-container">
+                <!-- Javascript will inject 7 stamp slots -->
+              </div>
+            </div>
+
+            <div class="pt-4 border-t border-slate-800/80 flex items-center justify-between text-xs">
+              <span class="text-slate-400">Recharge Progress:</span>
+              <span id="stamp-progress-text" class="text-solarGold font-semibold">0 / 5 Stamps</span>
+            </div>
+          </div>
+
+          <!-- CARD 3: SPACE DUST COLLECTOR -->
+          <div class="glass-card p-6 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-lunarSilver"></span>
+                  <h3 class="font-semibold text-sm text-slate-200">Space Dust Collector</h3>
+                </div>
+                <span class="text-[10px] uppercase tracking-wider text-lunarSilver bg-lunarSilver/10 border border-lunarSilver/20 px-2 py-0.5 rounded-md">Backlog</span>
+              </div>
+              <p class="text-xs text-slate-400 mb-4">Unfinished tasks float without guilt. Catch them or assign them to today.</p>
+
+              <!-- Dust Add Form -->
+              <div class="flex gap-2 mb-4">
+                <input type="text" id="input-dust-task" placeholder="Catch new drifting particle..." class="w-full bg-obsidian/70 border border-slate-700/80 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-lunarSilver transition-colors">
+                <button id="btn-add-dust" class="px-3 py-2 bg-slate-800 border border-slate-700 hover:border-lunarSilver text-lunarSilver rounded-lg text-xs font-semibold transition-all">
+                  + Add
+                </button>
+              </div>
+
+              <!-- Floating Dust List -->
+              <div id="dust-list-container" class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                <!-- Javascript injects floating dust items -->
+              </div>
+            </div>
+
+            <div class="mt-4 pt-3 border-t border-slate-800/80 text-[11px] text-slate-500 text-center">
+              Click <span class="text-solarGold">"+ Orbit"</span> to assign directly to today's timeline.
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ================= VIEW 2: ORBITAL PLANNER ================= -->
+      <section id="view-planner" class="workspace-view space-y-6 hidden">
+        
+        <!-- Header -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-4 border-b border-slate-800/60">
+          <div>
+            <h1 class="font-serif text-2xl font-semibold tracking-wide text-slate-100">Orbital Flight Path</h1>
+            <p class="text-xs text-slate-400 mt-1">Backwards planning beacons and 30-minute station allocations.</p>
+          </div>
+        </div>
+
+        <!-- High Cosmic Density Banner (Hidden by default) -->
+        <div id="density-alert-banner" class="hidden glass-card p-4 border-solarAmber/50 bg-solarAmber/10 flex items-center gap-3">
+          <span class="text-xl">⚠️</span>
+          <div class="text-xs text-solarAmber leading-relaxed">
+            <strong class="font-semibold">High Cosmic Density Detected:</strong> Multiple Fueling Beacons align near the same timeframe. Consider sliding an orbit block forward to avoid burnout!
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          
+          <!-- LEFT: ASSESSMENT BEACONS (4 cols) -->
+          <div class="lg:col-span-4 space-y-6">
+            <div class="glass-card p-5 space-y-4">
+              <h3 class="font-semibold text-sm text-slate-200 flex items-center gap-2">
+                <span>📌</span>
+                <span>Assessment Beacons</span>
+              </h3>
+              <p class="text-xs text-slate-400">Set major target date to back-calculate Scout (T-7), Fueling (T-3), and Landing (T-1) milestones.</p>
+
+              <!-- Form -->
+              <form id="form-beacon" class="space-y-3">
+                <div>
+                  <label class="block text-[11px] text-slate-400 mb-1">Assessment Name</label>
+                  <input type="text" id="beacon-title" placeholder="e.g. Physics Midterm Exam" required class="w-full bg-obsidian/70 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-solarGold">
+                </div>
+                <div>
+                  <label class="block text-[11px] text-slate-400 mb-1">Target Date</label>
+                  <input type="date" id="beacon-date" required class="w-full bg-obsidian/70 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-solarGold">
+                </div>
+                <button type="submit" class="w-full py-2 bg-solarGold/20 border border-solarGold/40 text-solarGold hover:bg-solarGold hover:text-obsidian rounded-lg text-xs font-semibold transition-all">
+                  Set Beacons
+                </button>
+              </form>
+            </div>
+
+            <!-- Beacons Output List -->
+            <div id="beacons-output-list" class="space-y-3">
+              <!-- JS rendered beacons cards -->
+            </div>
+          </div>
+
+          <!-- RIGHT: 30-MIN ORBITAL TIMELINE (8 cols) -->
+          <div class="lg:col-span-8">
+            <div class="glass-card p-5">
+              
+              <!-- Timeline Controls & Legend -->
+              <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 pb-3 border-b border-slate-800">
+                <h3 class="font-semibold text-sm text-slate-200 flex items-center gap-2">
+                  <span>⏱️</span>
+                  <span>Today's 30-Min Orbital Grid</span>
+                </h3>
+                
+                <div class="flex flex-wrap gap-2 text-[10px]">
+                  <span class="px-2 py-0.5 rounded bg-imperialAmethyst/20 text-imperialAmethyst border border-imperialAmethyst/30">B-325 Admin</span>
+                  <span class="px-2 py-0.5 rounded bg-cosmicSapphire/20 text-cosmicSapphire border border-cosmicSapphire/30">B-328 Study</span>
+                  <span class="px-2 py-0.5 rounded bg-solarAmber/20 text-solarAmber border border-solarAmber/30">B-329 Sprint</span>
+                  <span class="px-2 py-0.5 rounded bg-quietSage/20 text-quietSage border border-quietSage/30">Earth Oasis</span>
+                </div>
+              </div>
+
+              <!-- 48-Slot Timeline Scroll Container -->
+              <div id="timeline-slots-grid" class="space-y-1.5 max-h-[500px] overflow-y-auto pr-2">
+                <!-- Javascript injects 48 time slots -->
+              </div>
+
+              <!-- Prince Indicator Commentary Box -->
+              <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center gap-3 text-xs text-slate-400 bg-obsidian/40 p-3 rounded-xl border border-slate-800">
+                <span class="text-xl">👑</span>
+                <div id="prince-commentary-text" class="italic">
+                  The Little Prince silently stands at slot 14:00, gazing out into the dark space...
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ================= VIEW 3: GOAL STUDIO ================= -->
+      <section id="view-studio" class="workspace-view space-y-6 hidden">
+        
+        <!-- Header -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-4 border-b border-slate-800/60">
+          <div>
+            <h1 class="font-serif text-2xl font-semibold tracking-wide text-slate-100">Constellation Goal Studio</h1>
+            <p class="text-xs text-slate-400 mt-1">Map long-term ambitions into geometric nodes of starlight.</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          
+          <!-- Controls (4 cols) -->
+          <div class="lg:col-span-4 space-y-4">
+            <div class="glass-card p-5">
+              <h3 class="font-semibold text-sm text-slate-200 mb-4 flex items-center gap-2">
+                <span>🌌</span>
+                <span>Chart Constellation Goal</span>
+              </h3>
+
+              <form id="form-constellation" class="space-y-3">
+                <div>
+                  <label class="block text-[11px] text-slate-400 mb-1">Macro Vision / Goal Title</label>
+                  <input type="text" id="constellation-title" placeholder="e.g. Master Linear Algebra" required class="w-full bg-obsidian/70 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-solarGold">
+                </div>
+                <div>
+                  <label class="block text-[11px] text-slate-400 mb-1">Anchor Milestone Node</label>
+                  <input type="text" id="constellation-milestone" placeholder="e.g. Complete Eigenvector Proofs" required class="w-full bg-obsidian/70 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-solarGold">
+                </div>
+                <button type="submit" class="w-full py-2 bg-solarGold/20 border border-solarGold/40 text-solarGold hover:bg-solarGold hover:text-obsidian rounded-lg text-xs font-semibold transition-all">
+                  + Light New Node Cluster
+                </button>
+              </form>
+            </div>
+
+            <!-- Constellation List -->
+            <div id="constellation-list-container" class="space-y-2">
+              <!-- JS rendered goals -->
+            </div>
+          </div>
+
+          <!-- Interactive SVG Map Canvas (8 cols) -->
+          <div class="lg:col-span-8">
+            <div class="glass-card p-5 h-[480px] flex flex-col justify-between relative">
+              
+              <div class="flex justify-between items-center mb-2 z-10">
+                <span id="active-constellation-title" class="font-serif text-sm text-solarGold font-semibold">Select or Chart a Constellation</span>
+                <button id="btn-ignite-constellation" class="hidden px-4 py-1.5 bg-solarGold text-obsidian font-semibold text-xs rounded-lg shadow-lg shadow-solarGold/20 hover:scale-105 transition-all">
+                  ✨ Ignite 100% Light
+                </button>
+              </div>
+
+              <!-- SVG Canvas Viewport -->
+              <div class="flex-1 bg-obsidian/80 rounded-xl border border-slate-800 overflow-hidden relative flex items-center justify-center">
+                <svg id="constellation-svg" class="w-full h-full min-h-[350px]" viewBox="0 0 600 360">
+                  <!-- SVG elements injected via JavaScript -->
+                </svg>
+              </div>
+
+              <div class="text-[11px] text-slate-400 text-center mt-3">
+                Completed focus sessions illuminate connection threads between major milestones.
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- 3. VOLCANO FOCUS ENGINE MODAL -->
+  <div id="volcano-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-obsidian/80 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-300">
+    <div class="glass-card max-w-sm w-full p-6 text-center border-roseCrimson/40 relative shadow-2xl bg-indigoDark/90">
+      
+      <button id="btn-close-volcano" class="absolute top-4 right-4 text-slate-400 hover:text-slate-100 text-lg">&times;</button>
+
+      <div class="text-4xl mb-2 animate-bounce">🌋</div>
+      <h3 class="font-serif text-lg text-slate-100 font-semibold">Volcano Focus Engine</h3>
+      <p class="text-xs text-slate-400 mt-1 mb-6">Tend B-612's volcanoes to generate energy for your Rose.</p>
+
+      <!-- Timer Clock -->
+      <div id="timer-display" class="font-serif text-5xl font-bold text-solarGold tracking-wider my-4">
+        25:00
+      </div>
+
+      <!-- Presets -->
+      <div class="flex justify-center gap-2 mb-6">
+        <button class="btn-timer-preset px-3 py-1.5 rounded-lg text-xs bg-slate-800 text-slate-300 border border-slate-700 active" data-mins="25">25m Espresso</button>
+        <button class="btn-timer-preset px-3 py-1.5 rounded-lg text-xs bg-slate-800 text-slate-300 border border-slate-700" data-mins="50">50m Roast</button>
+        <button class="btn-timer-preset px-3 py-1.5 rounded-lg text-xs bg-slate-800 text-slate-300 border border-slate-700" data-mins="5">5m Break</button>
+      </div>
+
+      <!-- Controls -->
+      <div class="flex gap-3 justify-center">
+        <button id="btn-timer-start" class="px-6 py-2.5 bg-solarGold text-obsidian font-semibold rounded-lg text-xs hover:bg-solarGold/90 transition-all shadow-lg shadow-solarGold/20">
+          Start Session
+        </button>
+        <button id="btn-timer-reset" class="px-4 py-2.5 bg-slate-800 text-slate-300 rounded-lg text-xs hover:bg-slate-700 transition-all">
+          Reset
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT ENGINE -->
+  <script>
+    // --- APP STATE persistent storage ---
+    const STORAGE_KEY = 'b612_observatory_state_v3';
+
+    let appState = {
+      roseTarget: '',
+      starlightPower: 20, // 0 to 100
+      stamps: [true, false, true, false, false, false, false],
+      spaceDust: ['Review Thermodynamics formulas', 'Outline essay thesis statement'],
+      beacons: [
+        { id: 'b1', title: 'Calculus Final Exam', date: '2026-10-20' }
+      ],
+      timeBlocks: {},
+      constellations: [
+        { id: 'c1', title: 'Master Computer Science', milestone: 'Graph Theory Algorithms', completed: false }
+      ]
+    };
+
+    function loadState() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          appState = Object.assign({}, appState, JSON.parse(saved));
+        } catch (e) {
+          console.error("Failed to load local state", e);
+        }
+      }
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+      updateGlobalUI();
+    }
+
+    // --- BACKGROUND CANVAS STARFIELD ---
+    function initStarfield() {
+      const canvas = document.getElementById('starfield-canvas');
+      const ctx = canvas.getContext('2d');
+      let width = canvas.width = window.innerWidth;
+      let height = canvas.height = window.innerHeight;
+
+      window.addEventListener('resize', () => {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+      });
+
+      const stars = Array.from({ length: 120 }, () => ({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        radius: Math.random() * 1.5 + 0.5,
+        alpha: Math.random(),
+        speed: Math.random() * 0.02 + 0.005
+      }));
+
+      function animate() {
+        ctx.clearRect(0, 0, width, height);
+        stars.forEach(s => {
+          s.alpha += s.speed;
+          if (s.alpha > 1 || s.alpha < 0) s.speed = -s.speed;
+          ctx.fillStyle = `rgba(244, 196, 48, ${Math.abs(s.alpha) * 0.7})`;
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        requestAnimationFrame(animate);
+      }
+      animate();
+    }
+
+    // --- TIME-OF-DAY SKY ENGINE ---
+    const quotesList = [
+      { text: "The stars are beautiful, because of a flower that cannot be seen...", author: "Antoine de Saint-Exupéry" },
+      { text: "Straight ahead of him, nobody can go very far.", author: "The Little Prince" },
+      { text: "It is far more difficult to judge oneself than to judge others.", author: "The King" },
+      { text: "One sees clearly only with the heart. What is essential is invisible to the eye.", author: "The Fox" }
+    ];
+
+    function applyTimeOfDaySky() {
+      const hour = new Date().getHours();
+      const portal = document.getElementById('landing-portal');
+      const label = document.getElementById('sky-phase-label');
+
+      portal.classList.remove('sky-dawn', 'sky-zenith', 'sky-twilight', 'sky-midnight');
+
+      if (hour >= 5 && hour < 9) {
+        portal.classList.add('sky-dawn');
+        label.innerText = 'Dawn Horizon (05:00 - 08:59)';
+      } else if (hour >= 9 && hour < 17) {
+        portal.classList.add('sky-zenith');
+        label.innerText = 'Stellar Zenith (09:00 - 16:59)';
+      } else if (hour >= 17 && hour < 21) {
+        portal.classList.add('sky-twilight');
+        label.innerText = 'Twilight Crimson (17:00 - 20:59)';
+      } else {
+        portal.classList.add('sky-midnight');
+        label.innerText = 'Deep Cosmic Midnight (21:00 - 04:59)';
+      }
+
+      // Select quote
+      const q = quotesList[Math.floor(Math.random() * quotesList.length)];
+      document.getElementById('portal-quote-text').innerText = `"${q.text}"`;
+      document.getElementById('portal-quote-author').innerText = `— ${q.author}`;
+    }
+
+    // --- VIEW 1 LOBBY LOGIC ---
+    function renderLobby() {
+      // 1. Rose target
+      const inputRose = document.getElementById('input-rose-target');
+      inputRose.value = appState.roseTarget || '';
+
+      // Starlight Glow level
+      const glowOverlay = document.getElementById('starlight-glow-overlay');
+      const roseBloom = document.getElementById('rose-bloom-element');
+      const glowPower = appState.starlightPower || 20;
+
+      glowOverlay.style.opacity = (glowPower / 100).toString();
+      roseBloom.style.filter = `drop-shadow(0 0 ${8 + (glowPower * 0.2)}px var(--rose-crimson))`;
+
+      document.getElementById('starlight-power-indicator').innerText = `Starlight Power: ${glowPower}%`;
+
+      // 2. Stamp Grid
+      const stampContainer = document.getElementById('stamp-grid-container');
+      stampContainer.innerHTML = '';
+      let activeCount = 0;
+
+      appState.stamps.forEach((isStamped, idx) => {
+        if (isStamped) activeCount++;
+        const btn = document.createElement('div');
+        btn.className = `stamp-item ${isStamped ? 'active' : ''}`;
+        btn.innerHTML = isStamped ? '✦' : '<span class="text-[10px] text-slate-600">'+(idx+1)+'</span>';
+        btn.addEventListener('click', () => {
+          appState.stamps[idx] = !appState.stamps[idx];
+          saveState();
+          renderLobby();
+        });
+        stampContainer.appendChild(btn);
+      });
+
+      document.getElementById('stamp-progress-text').innerText = `${activeCount} / 5 Stamps`;
+
+      // 3. Space Dust List
+      const dustContainer = document.getElementById('dust-list-container');
+      dustContainer.innerHTML = '';
+
+      appState.spaceDust.forEach((task, idx) => {
+        const item = document.createElement('div');
+        item.className = 'dust-pill p-2.5 rounded-lg flex items-center justify-between text-xs gap-2';
+        item.innerHTML = `
+          <div class="flex items-center gap-2 truncate">
+            <span class="text-lunarSilver">🌫️</span>
+            <span class="text-slate-300 truncate">${task}</span>
+          </div>
+          <div class="flex items-center gap-1 shrink-0">
+            <button class="btn-orbit-dust px-2 py-0.5 rounded bg-solarGold/10 text-solarGold hover:bg-solarGold hover:text-obsidian text-[10px] transition-all">+ Orbit</button>
+            <button class="btn-remove-dust text-slate-500 hover:text-roseCrimson px-1 text-sm">&times;</button>
+          </div>
+        `;
+
+        item.querySelector('.btn-remove-dust').addEventListener('click', () => {
+          appState.spaceDust.splice(idx, 1);
+          saveState();
+          renderLobby();
+        });
+
+        item.querySelector('.btn-orbit-dust').addEventListener('click', () => {
+          // Assign to first open time slot
+          const emptySlot = findFirstEmptySlot();
+          if (emptySlot !== null) {
+            appState.timeBlocks[emptySlot] = { type: 'geographer', title: task };
+            appState.spaceDust.splice(idx, 1);
+            saveState();
+            showToast('✨ Space dust converted to orbital timeline slot!');
+            renderLobby();
+            renderPlanner();
+          } else {
+            showToast('⚠️ No open timeline slots available today.');
+          }
+        });
+
+        dustContainer.appendChild(item);
+      });
+    }
+
+    function findFirstEmptySlot() {
+      for (let i = 0; i < 48; i++) {
+        if (!appState.timeBlocks[i]) return i;
+      }
+      return null;
+    }
+
+    // --- VIEW 2 PLANNER LOGIC ---
+    function renderPlanner() {
+      // 1. Render Beacons
+      const beaconsContainer = document.getElementById('beacons-output-list');
+      beaconsContainer.innerHTML = '';
+
+      let fuelingDates = [];
+
+      appState.beacons.forEach((b, idx) => {
+        const targetDate = new Date(b.date);
+        
+        // Scout T-7, Fueling T-3, Landing T-1
+        const scout = new Date(targetDate); scout.setDate(targetDate.getDate() - 7);
+        const fueling = new Date(targetDate); fueling.setDate(targetDate.getDate() - 3);
+        const landing = new Date(targetDate); landing.setDate(targetDate.getDate() - 1);
+
+        fuelingDates.push(fueling.toISOString().split('T')[0]);
+
+        const card = document.createElement('div');
+        card.className = 'glass-card p-4 space-y-2 border-slate-700/60';
+        card.innerHTML = `
+          <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+            <h4 class="font-semibold text-xs text-slate-100">${b.title}</h4>
+            <span class="text-[10px] text-slate-400">${b.date}</span>
+          </div>
+          <div class="space-y-1 text-[11px]">
+            <div class="p-1.5 rounded bg-quietSage/10 text-quietSage border border-quietSage/20 flex justify-between">
+              <span>🔭 Scout (T-7)</span>
+              <span>${scout.toISOString().split('T')[0]}</span>
+            </div>
+            <div class="p-1.5 rounded bg-solarAmber/10 text-solarAmber border border-solarAmber/20 flex justify-between">
+              <span>🚀 Fueling (T-3)</span>
+              <span>${fueling.toISOString().split('T')[0]}</span>
+            </div>
+            <div class="p-1.5 rounded bg-roseCrimson/10 text-roseCrimson border border-roseCrimson/20 flex justify-between">
+              <span>🛬 Landing (T-1)</span>
+              <span>${landing.toISOString().split('T')[0]}</span>
+            </div>
+          </div>
+        `;
+        beaconsContainer.appendChild(card);
+      });
+
+      // Check density alert
+      const hasDensityConflict = new Set(fuelingDates).size < fuelingDates.length;
+      const densityBanner = document.getElementById('density-alert-banner');
+      if (hasDensityConflict && fuelingDates.length > 1) {
+        densityBanner.classList.remove('hidden');
+      } else {
+        densityBanner.classList.add('hidden');
+      }
+
+      // 2. Render 48-slot timeline grid
+      const gridContainer = document.getElementById('timeline-slots-grid');
+      gridContainer.innerHTML = '';
+
+      const currentHour = new Date().getHours();
+      const currentMin = new Date().getMinutes();
+      const activeSlotIdx = (currentHour * 2) + (currentMin >= 30 ? 1 : 0);
+
+      for (let i = 0; i < 48; i++) {
+        const hour = Math.floor(i / 2);
+        const mins = (i % 2 === 0) ? '00' : '30';
+        const timeLabel = `${String(hour).padStart(2, '0')}:${mins}`;
+
+        const slotData = appState.timeBlocks[i] || { type: '', title: '' };
+
+        const isCurrent = i === activeSlotIdx;
+
+        const row = document.createElement('div');
+        row.className = `p-2 rounded-lg border text-xs flex items-center justify-between gap-3 ${isCurrent ? 'bg-solarGold/10 border-solarGold/50' : 'bg-obsidian/40 border-slate-800'}`;
+        
+        row.innerHTML = `
+          <div class="w-12 text-[11px] text-slate-400 font-mono">${timeLabel}</div>
+          <select class="slot-type-select bg-indigoDark border border-slate-700 text-slate-200 text-[11px] rounded px-2 py-1 focus:outline-none">
+            <option value="" ${slotData.type===''?'selected':''}>-- Open Orbit --</option>
+            <option value="king" ${slotData.type==='king'?'selected':''}>B-325 King (Admin)</option>
+            <option value="geographer" ${slotData.type==='geographer'?'selected':''}>B-328 Geographer (Study)</option>
+            <option value="lamplighter" ${slotData.type==='lamplighter'?'selected':''}>B-329 Lamplighter (Sprint)</option>
+            <option value="oasis" ${slotData.type==='oasis'?'selected':''}>Earth Oasis (Rest)</option>
+          </select>
+          <input type="text" placeholder="Task details..." value="${slotData.title || ''}" class="slot-title-input flex-1 bg-obsidian/60 border border-slate-800 rounded px-2 py-1 text-slate-200 text-[11px] focus:outline-none">
+          ${isCurrent ? '<span class="text-base" title="Current Orbit Slot">👑</span>' : ''}
+        `;
+
+        row.querySelector('.slot-type-select').addEventListener('change', (e) => {
+          if (!appState.timeBlocks[i]) appState.timeBlocks[i] = {};
+          appState.timeBlocks[i].type = e.target.value;
+          saveState();
+        });
+
+        row.querySelector('.slot-title-input').addEventListener('change', (e) => {
+          if (!appState.timeBlocks[i]) appState.timeBlocks[i] = {};
+          appState.timeBlocks[i].title = e.target.value;
+          saveState();
+        });
+
+        gridContainer.appendChild(row);
+      }
+
+      // Prince commentary update
+      document.getElementById('prince-commentary-text').innerText = 
+        `The Little Prince stands silently at slot ${String(currentHour).padStart(2, '0')}:${currentMin >= 30 ? '30' : '00'}, gazing into the dark canvas...`;
+    }
+
+    // --- VIEW 3 GOAL STUDIO LOGIC ---
+    let selectedConstellationId = null;
+
+    function renderStudio() {
+      const listContainer = document.getElementById('constellation-list-container');
+      listContainer.innerHTML = '';
+
+      appState.constellations.forEach(c => {
+        const item = document.createElement('div');
+        item.className = `glass-card p-3 cursor-pointer border-slate-800 ${selectedConstellationId === c.id ? 'border-solarGold bg-solarGold/10' : ''}`;
+        item.innerHTML = `
+          <div class="flex items-center justify-between">
+            <h4 class="font-semibold text-xs text-slate-200">✨ ${c.title}</h4>
+            <span class="text-[10px] ${c.completed ? 'text-solarGold' : 'text-slate-500'}">${c.completed ? '100% Light' : 'In Progress'}</span>
+          </div>
+          <p class="text-[11px] text-slate-400 mt-1">${c.milestone}</p>
+        `;
+
+        item.addEventListener('click', () => {
+          selectedConstellationId = c.id;
+          renderStudio();
+          drawConstellationSVG(c);
+        });
+
+        listContainer.appendChild(item);
+      });
+
+      if (!selectedConstellationId && appState.constellations.length > 0) {
+        selectedConstellationId = appState.constellations[0].id;
+        drawConstellationSVG(appState.constellations[0]);
+      }
+    }
+
+    function drawConstellationSVG(c) {
+      document.getElementById('active-constellation-title').innerText = c.title;
+      const btnIgnite = document.getElementById('btn-ignite-constellation');
+      btnIgnite.classList.remove('hidden');
+
+      const svg = document.getElementById('constellation-svg');
+      const isLit = c.completed;
+      const lineColor = isLit ? '#F4C430' : 'rgba(255, 255, 255, 0.2)';
+      const lineGlow = isLit ? 'filter="drop-shadow(0 0 6px #F4C430)"' : '';
+
+      svg.innerHTML = `
+        <!-- SVG Connections -->
+        <line x1="300" y1="80" x2="160" y2="180" stroke="${lineColor}" stroke-width="2" ${lineGlow} />
+        <line x1="300" y1="80" x2="440" y2="180" stroke="${lineColor}" stroke-width="2" ${lineGlow} />
+        <line x1="160" y1="180" x2="240" y2="280" stroke="${lineColor}" stroke-width="2" ${lineGlow} />
+        <line x1="440" y1="180" x2="360" y2="280" stroke="${lineColor}" stroke-width="2" ${lineGlow} />
+        <line x1="240" y1="280" x2="360" y2="280" stroke="${lineColor}" stroke-width="2" ${lineGlow} />
+
+        <!-- Nodes -->
+        <circle cx="300" cy="80" r="8" fill="#F4C430" filter="drop-shadow(0 0 10px #F4C430)" />
+        <text x="300" y="60" text-anchor="middle" fill="#F4C430" font-size="11" font-family="Cinzel">${c.title}</text>
+
+        <circle cx="160" cy="180" r="6" fill="#61AFEF" />
+        <text x="140" y="180" text-anchor="end" fill="#61AFEF" font-size="10">Research</text>
+
+        <circle cx="440" cy="180" r="6" fill="#E5C07B" />
+        <text x="460" y="180" text-anchor="start" fill="#E5C07B" font-size="10">Practice</text>
+
+        <circle cx="240" cy="280" r="6" fill="#A9A1E1" />
+        <text x="240" y="300" text-anchor="middle" fill="#A9A1E1" font-size="10">${c.milestone}</text>
+
+        <circle cx="360" cy="280" r="6" fill="#98C379" />
+        <text x="360" y="300" text-anchor="middle" fill="#98C379" font-size="10">Mastery</text>
+      `;
+
+      btnIgnite.onclick = () => {
+        c.completed = true;
+        saveState();
+        drawConstellationSVG(c);
+        renderStudio();
+        showToast("🌌 Constellation illuminated! The Little Prince gazes at your finished star map.");
+      };
+    }
+
+    // --- TIMER ENGINE ---
+    let timerDuration = 25 * 60;
+    let timerRemaining = 25 * 60;
+    let timerInterval = null;
+    let isTimerRunning = false;
+
+    function playBellSound() {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 2.5);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 2.5);
+      } catch (e) {
+        console.log("Audio not supported or allowed", e);
+      }
+    }
+
+    function initTimer() {
+      const modal = document.getElementById('volcano-modal');
+      const timerDisplay = document.getElementById('timer-display');
+      const btnStart = document.getElementById('btn-timer-start');
+
+      document.getElementById('btn-open-volcano').addEventListener('click', () => {
+        modal.classList.remove('opacity-0', 'pointer-events-none');
+      });
+
+      document.getElementById('btn-close-volcano').addEventListener('click', () => {
+        modal.classList.add('opacity-0', 'pointer-events-none');
+      });
+
+      document.querySelectorAll('.btn-timer-preset').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.btn-timer-preset').forEach(b => b.classList.remove('active', 'border-solarGold', 'text-solarGold'));
+          btn.classList.add('active', 'border-solarGold', 'text-solarGold');
+          const mins = parseInt(btn.dataset.mins);
+          timerDuration = mins * 60;
+          timerRemaining = timerDuration;
+          updateTimerDisplay();
+          if (isTimerRunning) resetTimer();
+        });
+      });
+
+      function updateTimerDisplay() {
+        const m = Math.floor(timerRemaining / 60);
+        const s = timerRemaining % 60;
+        timerDisplay.innerText = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+      }
+
+      function resetTimer() {
+        clearInterval(timerInterval);
+        isTimerRunning = false;
+        timerRemaining = timerDuration;
+        btnStart.innerText = "Start Session";
+        updateTimerDisplay();
+      }
+
+      btnStart.addEventListener('click', () => {
+        if (isTimerRunning) {
+          clearInterval(timerInterval);
+          isTimerRunning = false;
+          btnStart.innerText = "Resume Session";
+        } else {
+          isTimerRunning = true;
+          btnStart.innerText = "Pause Session";
+
+          const startTime = Date.now();
+          const initialRemaining = timerRemaining;
+
+          timerInterval = setInterval(() => {
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            timerRemaining = initialRemaining - elapsed;
+
+            if (timerRemaining <= 0) {
+              clearInterval(timerInterval);
+              isTimerRunning = false;
+              timerRemaining = 0;
+              updateTimerDisplay();
+              btnStart.innerText = "Start Session";
+
+              // Add starlight power
+              appState.starlightPower = Math.min(100, (appState.starlightPower || 0) + 25);
+              saveState();
+              playBellSound();
+              showToast("🌋 Volcano session complete! Starlight energy injected into the Rose.");
+            } else {
+              updateTimerDisplay();
+            }
+          }, 500);
+        }
+      });
+
+      document.getElementById('btn-timer-reset').addEventListener('click', resetTimer);
+    }
+
+    // --- UI UTILITY TOAST ---
+    function showToast(msg) {
+      const banner = document.getElementById('toast-banner');
+      document.getElementById('toast-message').innerText = msg;
+      banner.classList.remove('translate-x-full');
+      setTimeout(() => {
+        banner.classList.add('translate-x-full');
+      }, 4000);
+    }
+
+    function updateGlobalUI() {
+      renderLobby();
+      renderPlanner();
+    }
+
+    // --- INITIALIZATION ON LOAD ---
+    window.addEventListener('load', () => {
+      loadState();
+      initStarfield();
+      applyTimeOfDaySky();
+      initTimer();
+
+      // Navigation handler
+      const navBtns = document.querySelectorAll('.nav-btn');
+      const views = document.querySelectorAll('.workspace-view');
+
+      navBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const target = btn.dataset.target;
+          navBtns.forEach(b => {
+            b.classList.remove('active', 'text-solarGold', 'bg-solarGold/10', 'border', 'border-solarGold/20');
+            b.classList.add('text-slate-400');
+          });
+          btn.classList.add('active', 'text-solarGold', 'bg-solarGold/10', 'border', 'border-solarGold/20');
+          btn.classList.remove('text-slate-400');
+
+          views.forEach(v => v.classList.add('hidden'));
+          document.getElementById(target).classList.remove('hidden');
+        });
+      });
+
+      // Ignition Button Transition
+      document.getElementById('btn-ignition').addEventListener('click', () => {
+        const portal = document.getElementById('landing-portal');
+        const appShell = document.getElementById('app-shell');
+
+        portal.style.opacity = '0';
+        portal.style.transform = 'scale(1.05)';
+        portal.style.pointerEvents = 'none';
+
+        setTimeout(() => {
+          portal.classList.add('hidden');
+          appShell.classList.remove('opacity-0', 'pointer-events-none');
+          updateGlobalUI();
+          renderStudio();
+        }, 700);
+      });
+
+      // Form Listeners
+      document.getElementById('btn-save-rose').addEventListener('click', () => {
+        const val = document.getElementById('input-rose-target').value;
+        appState.roseTarget = val;
+        saveState();
+        showToast('🌹 Primary target protected under glass!');
+      });
+
+      document.getElementById('btn-add-dust').addEventListener('click', () => {
+        const input = document.getElementById('input-dust-task');
+        if (input.value.trim()) {
+          appState.spaceDust.push(input.value.trim());
+          input.value = '';
+          saveState();
+          renderLobby();
+        }
+      });
+
+      document.getElementById('form-beacon').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const title = document.getElementById('beacon-title').value;
+        const date = document.getElementById('beacon-date').value;
+
+        appState.beacons.push({ id: Date.now().toString(), title, date });
+        saveState();
+        renderPlanner();
+        e.target.reset();
+        showToast('📌 Assessment beacons calculated and anchored!');
+      });
+
+      document.getElementById('form-constellation').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const title = document.getElementById('constellation-title').value;
+        const milestone = document.getElementById('constellation-milestone').value;
+
+        const newC = { id: Date.now().toString(), title, milestone, completed: false };
+        appState.constellations.push(newC);
+        saveState();
+        renderStudio();
+        drawConstellationSVG(newC);
+        e.target.reset();
+        showToast('🌌 New constellation node cluster mapped!');
+      });
+
+      // Initial view render
+      updateGlobalUI();
+    });
+  </script>
+</body>
+</html>
